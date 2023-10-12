@@ -1,4 +1,4 @@
-package com.example.swiftinvoice2
+package com.vicsystems.swiftinvoice2
 
 import io.flutter.embedding.android.FlutterActivity
 

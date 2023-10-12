@@ -17,9 +17,9 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   List offices = ['Office A', 'Office B', 'Office C', 'Office D'];
   late String selectedOffice = 'Office A';
   List<CardItem> cardItems = [
-    CardItem("Item 1"),
-    CardItem("Item 2"),
-    CardItem("Item 3"),
+    CardItem("Item 1", '1'),
+    CardItem("Item 2", '1'),
+    CardItem("Item 3", '1'),
   ];
 
   List<Map<String, dynamic>> jsonDataList = [
@@ -44,6 +44,8 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   late Box user_info;
 
   String token = "";
+
+  
 
   Future<dynamic> getBusinessProfiles() async {
     var dir = await getApplicationDocumentsDirectory();
@@ -88,8 +90,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
 
     setState(() {});
 
-    String url =
-        "https://invoiceapp.vicsystems.com.ng/api/v1/business-profiles";
+    String url = "https://invoiceapp.vicsystems.com.ng/api/v1/billable-items";
 
     try {
       var response = await http.get(
@@ -103,7 +104,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       print('got billable items');
       var _jsonDecode = await jsonDecode((response.body));
 
-      print(_jsonDecode);
+      // print(_jsonDecode);
 
       await putData(_jsonDecode);
     } catch (SocketException) {
@@ -256,17 +257,46 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
                 child: Stack(
                   children: <Widget>[
                     // Conditionally show the ListView or the CircularProgressIndicator
-                    if (isLoading)
-                      Center(
-                        child: CircularProgressIndicator(),
-                      )
+                    if (billable_items.length == 0)
+                      Column(children: [
+                        Text('No billable items yet.'),
+                        Container(
+                          height: 30,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                              shape: MaterialStateProperty.all<
+                                  RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        CreateBillableItemPage()),
+                              );
+                            },
+                            child: Text(
+                              'Add',
+                              style: TextStyle(
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ])
                     else
                       PageView.builder(
                         itemCount: billable_items.length,
                         controller: PageController(viewportFraction: 0.8),
                         itemBuilder: (BuildContext context, int index) {
                           return CardWidget(
-                              cardItem: billable_items[index]['description']);
+                              cardItem: CardItem(
+                                  billable_items[index]['description'],
+                                  billable_items[index]['price']));
                         },
                       ),
                   ],
@@ -308,10 +338,11 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
 
 class CardItem {
   String name;
+  String price;
   int quantity = 0;
   bool selected = false;
 
-  CardItem(this.name);
+  CardItem(this.name, this.price);
 }
 
 class CardWidget extends StatefulWidget {
@@ -337,15 +368,26 @@ class _CardWidgetState extends State<CardWidget> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 130,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(5, 15, 0, 5),
-                child: Text(
-                  widget.cardItem.name,
-                  style: TextStyle(fontSize: 15),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 130,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(5, 15, 0, 5),
+                    child: Text(
+                      widget.cardItem.name,
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
                 ),
-              ),
+                Text(
+                      'NGN '+widget.cardItem.price,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 13,)
+              ],
             ),
             Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
